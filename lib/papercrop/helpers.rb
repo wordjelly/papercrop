@@ -21,12 +21,7 @@ module Papercrop
           :style => "width:#{width}px; height:#{height}px; overflow:hidden"
         }
 
-        image_options = {
-          :id    => "#{attachment}_crop_preview",
-          :style => "max-width:none; max-height:none"
-        }
-
-        preview_image = @template.image_tag(self.object.send(attachment).url, image_options)
+        preview_image = @template.image_tag(self.object.send(attachment).url, :id => "#{attachment}_crop_preview")
 
         @template.content_tag(:div, preview_image, wrapper_options)
       end
@@ -44,7 +39,7 @@ module Papercrop
     #   cropbox :avatar, :width => 650, :aspect => false
     #
     # @param attachment [Symbol] attachment name
-    # @param opts [Hash]
+    # @param opts [Hash] => if this contains two keys namely 'data-corner-id' and 'data-element-id', then these will be set on each of the four namely "crop_x", "crop_y", "crop_w", "crop_h", and a class will be assigned to each of them called 'crop-attribute'.
     def cropbox(attachment, opts = {})
       attachment      = attachment.to_sym
       original_width  = self.object.image_geometry(attachment, :original).width.to_i
@@ -59,7 +54,11 @@ module Papercrop
         box << self.hidden_field(:"#{attachment}_aspect",     :value => aspect, :id => "#{attachment}_aspect")
         
         for attribute in [:crop_x, :crop_y, :crop_w, :crop_h] do
-          box << self.hidden_field(:"#{attachment}_#{attribute}", :id => "#{attachment}_#{attribute}")
+          if (opts["data-corner-id"] && opts["data-element-id"])
+            box << self.hidden_field(:"#{attachment}_#{attribute}", :id => "#{attachment}_#{attribute}", :'data-corner-id' => opts["data-corner-id"], :'data-element-id' => opts["data-element-id"], :class => 'crop-attribute') 
+          else
+            box << self.hidden_field(:"#{attachment}_#{attribute}", :id => "#{attachment}_#{attribute}")
+          end
         end
 
         crop_image = @template.image_tag(self.object.send(attachment).url)
